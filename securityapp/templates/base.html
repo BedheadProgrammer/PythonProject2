@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CrisisLock</title>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, black, darkred, red, grey, white);
+            color: white;
+        }
+        .navbar {
+            background-color: black;
+            padding: 10px;
+        }
+        .navbar a {
+            margin-right: 20px;
+            text-decoration: none;
+            padding: 5px 10px;
+            background-color: white;
+            color: black;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center;">CrisisLock</h1>
+        <div class="navbar">
+            {% if request.session.logged_in %}
+                <a href="{% url 'dashboard' %}">User Dashboard</a>
+                <a href="{% url 'security' %}">Security</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+            {% endif %}
+        </div>
+        <div class="content">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+</body>
+</html>
