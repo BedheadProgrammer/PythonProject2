@@ -5,45 +5,46 @@
   <p>{{ message }}</p>
 {% endif %}
 
-<!-- Form to start the security system -->
 <form method="post" style="margin-bottom: 20px;">
   {% csrf_token %}
   <input type="hidden" name="action" value="start">
-  <button type="submit" style="background-color: white; color: black;">Start Security System</button>
+  <button type="submit" class="btn">Start Security System</button>
 </form>
 
 <hr>
 
-<!-- Form to upload a face image -->
 <h3>Upload Face Image</h3>
 <form method="post" enctype="multipart/form-data" style="margin-bottom: 20px;">
   {% csrf_token %}
   <input type="hidden" name="action" value="upload">
   <div>
-    <label for="face_image">Select image:</label>
-    <input type="file" name="face_image" accept="image/*" required>
+    <label for="face_image">Selected Image:</label>
+    <span id="file-name">No file selected</span>
+    <!-- Hidden file input -->
+    <input type="file" id="face_image" name="face_image" accept="image/*" style="display: none;" required
+           onchange="document.getElementById('file-name').innerText = this.files[0].name;">
+    <!-- Button that triggers the file input -->
+    <button type="button" onclick="document.getElementById('face_image').click();">Select Image</button>
   </div>
   <div>
     <label for="individual_type">Individual Type:</label>
-    <select name="individual_type" required>
+    <select id="individual_type" name="individual_type" required>
       <option value="protected">Protected</option>
       <option value="warning">Warning</option>
     </select>
   </div>
   <div style="margin-top: 10px;">
-    <button type="submit" style="background-color: white; color: black;">Upload Face</button>
+    <button type="submit" class="btn">Upload Face</button>
   </div>
 </form>
 
 <hr>
 
-<!-- Live Video Feed Container -->
 <div id="video-feed" style="margin-top:20px;">
   <h3>Live Video Feed</h3>
   <img id="video-feed-img" src="{% url 'video_feed' %}" alt="Video Feed" style="width:100%;">
 </div>
 
-<!-- JavaScript to hide the video feed when Escape is pressed -->
 <script>
 document.addEventListener('keyup', function(e) {
     if (e.key === "Escape") {
