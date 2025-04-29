@@ -1,64 +1,86 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Security Section</h2>
-{% if message %}
-  <p>{{ message }}</p>
-{% endif %}
+  <h2>Security Section</h2>
+  {% if message %}
+    <p>{{ message }}</p>
+  {% endif %}
 
-<form method="post" style="margin-bottom: 20px;">
-  {% csrf_token %}
-  <input type="hidden" name="action" value="start">
-  <button type="submit" class="btn">Start Security System</button>
-</form>
+  <hr>
 
-<hr>
+  <h3>Upload Face Image</h3>
+  <form
+    method="post"
+    action="{% url 'security' %}"
+    enctype="multipart/form-data"
+    style="margin-bottom:20px;"
+  >
+    {% csrf_token %}
+    <input type="hidden" name="action" value="upload">
 
-<h3>Bulk-add faces from server path</h3>
-<input id="path"  placeholder="/srv/images/new_set">
-<select id="itype">
-    <option value="protected">protected</option>
-    <option value="warning">warning</option>
-</select>
-<button id="run-add" class="btn">Run import</button>
+    <div>
+      <label for="face_image">Choose Image:</label>
+      <input
+        type="file"
+        id="face_image"
+        name="face_image"
+        accept="image/*"
+        required
+      >
+    </div>
 
-<pre id="import-log" style="background:#000;color:#0f0;height:240px;
-                            overflow:auto;margin-top:10px;"></pre>
+    <div style="margin-top:10px;">
+      <label for="individual_type">Individual Type:</label>
+      <select id="individual_type" name="individual_type" required>
+        <option value="protected">Protected</option>
+        <option value="warning">Warning</option>
+      </select>
+    </div>
 
-<script>
-document.getElementById('run-add').onclick = () => {
-    const path  = encodeURIComponent(document.getElementById('path').value);
-    const type  = encodeURIComponent(document.getElementById('itype').value);
-    const log   = document.getElementById('import-log');
-    log.textContent = "";
+    <div style="margin-top:10px;">
+      <button type="submit" class="btn">Upload Face</button>
+    </div>
+  </form>
 
-    const es = new EventSource(
-        `{% url 'add_faces_console' %}?path=${path}&type=${type}`
-    );
+  <hr>
 
-    es.onmessage = e => {
-        log.textContent += e.data + "\n";
-        log.scrollTop = log.scrollHeight;
-    };
-    es.addEventListener('done', () => es.close());
-    es.onerror = () => { es.close(); log.textContent += "\n[stream stopped]"; };
-};
-</script>
+  <h3>Door Control</h3>
+  <form
+    method="post"
+    action="{% url 'security' %}"
+    style="display:inline-block; margin-right:10px;"
+  >
+    {% csrf_token %}
+    <input type="hidden" name="action" value="lock">
+    <button type="submit" class="btn">Lock Door</button>
+  </form>
+  <form
+    method="post"
+    action="{% url 'security' %}"
+    style="display:inline-block;"
+  >
+    {% csrf_token %}
+    <input type="hidden" name="action" value="unlock">
+    <button type="submit" class="btn">Unlock Door</button>
+  </form>
 
-<hr>
+  <hr>
 
-<div id="video-feed" style="margin-top:20px;">
-  <h3>Live Video Feed</h3>
-  <img id="video-feed-img" src="{% url 'video_feed' %}" alt="Video Feed" style="width:100%;">
-</div>
 
-<script>
-document.addEventListener('keyup', function(e) {
-    if (e.key === "Escape") {
-        var videoFeed = document.getElementById('video-feed');
-        if (videoFeed) {
-            videoFeed.style.display = 'none';
-        }
-    }
-});
-</script>
+  <div id="video-feed" style="margin-top:20px;">
+    <h3>Live Video Feed</h3>
+    <img
+      id="video-feed-img"
+      src="{% url 'video_feed' %}"
+      alt="Video Feed"
+      style="width:100%;"
+    >
+  </div>
+
+  <script>
+    document.addEventListener('keyup', function(e) {
+      if (e.key === "Escape") {
+        document.getElementById('video-feed').style.display = 'none';
+      }
+    });
+  </script>
 {% endblock %}
