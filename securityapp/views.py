@@ -1,6 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.http import StreamingHttpResponse
+from django.views.decorators.http import require_GET
+
+from .console_jobs import stream_add_faces  #  ← correct
+
 from django.views.decorators import gzip
 import threading
 import cv2
@@ -30,6 +34,26 @@ def login_view(request):
         else:
             messages.error(request, "Invalid login credentials")
     return render(request, 'login.html')
+@require_GET
+@login_required           # reuse your decorator if desired
+def add_faces_console(request):
+    """
+    ?path=/abs/or/relative & type=protected|warning
+    Streams progress from stream_add_faces() as Server-Sent Events.
+    """
+    path = request.GET.get("path", "")
+    ind_type = request.GET.get("type", "").lower()
+
+    def event_stream():
+        for line in stream_add_faces(path, ind_type):
+            yield f"data: {line.rstrip()}\n\n"
+        yield "event: done\ndata: finished\n\n"
+
+    return StreamingHttpResponse(
+        event_stream(),
+        content_type="text/event-stream",
+        headers={"Cache-Control": "no-cache"},
+    )
 
 @login_required
 def dashboard_view(request):

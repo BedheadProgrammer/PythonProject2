@@ -13,30 +13,36 @@
 
 <hr>
 
-<h3>Upload Face Image</h3>
-<form method="post" enctype="multipart/form-data" style="margin-bottom: 20px;">
-  {% csrf_token %}
-  <input type="hidden" name="action" value="upload">
-  <div>
-    <label for="face_image">Selected Image:</label>
-    <span id="file-name">No file selected</span>
-    <!-- Hidden file input -->
-    <input type="file" id="face_image" name="face_image" accept="image/*" style="display: none;" required
-           onchange="document.getElementById('file-name').innerText = this.files[0].name;">
-    <!-- Button that triggers the file input -->
-    <button type="button" onclick="document.getElementById('face_image').click();">Select Image</button>
-  </div>
-  <div>
-    <label for="individual_type">Individual Type:</label>
-    <select id="individual_type" name="individual_type" required>
-      <option value="protected">Protected</option>
-      <option value="warning">Warning</option>
-    </select>
-  </div>
-  <div style="margin-top: 10px;">
-    <button type="submit" class="btn">Upload Face</button>
-  </div>
-</form>
+<h3>Bulk-add faces from server path</h3>
+<input id="path"  placeholder="/srv/images/new_set">
+<select id="itype">
+    <option value="protected">protected</option>
+    <option value="warning">warning</option>
+</select>
+<button id="run-add" class="btn">Run import</button>
+
+<pre id="import-log" style="background:#000;color:#0f0;height:240px;
+                            overflow:auto;margin-top:10px;"></pre>
+
+<script>
+document.getElementById('run-add').onclick = () => {
+    const path  = encodeURIComponent(document.getElementById('path').value);
+    const type  = encodeURIComponent(document.getElementById('itype').value);
+    const log   = document.getElementById('import-log');
+    log.textContent = "";
+
+    const es = new EventSource(
+        `{% url 'add_faces_console' %}?path=${path}&type=${type}`
+    );
+
+    es.onmessage = e => {
+        log.textContent += e.data + "\n";
+        log.scrollTop = log.scrollHeight;
+    };
+    es.addEventListener('done', () => es.close());
+    es.onerror = () => { es.close(); log.textContent += "\n[stream stopped]"; };
+};
+</script>
 
 <hr>
 

@@ -66,28 +66,60 @@ class DatabaseFaceRecognizer:
         finally:
             conn.close()
 
-    def add_faces_from_path(self, path, individual_type):
-        if os.path.isfile(path):
-            image = cv2.imread(path)
-            if image is None:
-                print("Error loading image.")
+        def add_faces_from_path(self, path, individual_type, stream=False):
+            """
+            Import every face image found at *path* into the database.
+
+            Parameters
+            ----------
+            path : str
+                Absolute or relative file/folder path.
+            individual_type : str
+                Either "protected" or "warning".
+            stream : bool, default False
+                If True, yield status strings instead of printing them.
+            """
+
+            def send(msg):
+                if stream:
+                    # trim trailing new-line, Django will add it when it rebroadcasts
+                    yield msg.rstrip()
+                else:
+                    print(msg)
+
+            # 1) Validate path
+            if not os.path.exists(path):
+                yield from send(f"ERROR: Path does not exist → {path}")
+                return
+
+            # 2) Import a single file
+            if os.path.isfile(path):
+                yield from self._process_file(path, individual_type, send)
+
+            # 3) Import every image in a directory
+            elif os.path.isdir(path):
+                file_count = 0
+                for name in os.listdir(path):
+                    if name.lower().endswith((".jpg", ".jpeg", ".png")):
+                        file_count += 1
+                        file_path = os.path.join(path, name)
+                        yield from self._process_file(file_path, individual_type, send)
+                yield from send(f"FINISHED: {file_count} image(s) added from {path}")
+
+            # 4) Not a file or directory
             else:
-                individual_id = os.path.splitext(os.path.basename(path))[0]
-                name = individual_id
-                self.add_face(image, individual_id, name, individual_type)
-        elif os.path.isdir(path):
-            for filename in os.listdir(path):
-                if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-                    image_path = os.path.join(path, filename)
-                    image = cv2.imread(image_path)
-                    if image is None:
-                        print(f"Error loading image: {filename}")
-                        continue
-                    individual_id = os.path.splitext(filename)[0]
-                    name = individual_id
-                    self.add_face(image, individual_id, name, individual_type)
-        else:
-            print("The provided path is neither a file nor a directory.")
+                yield from send("ERROR: Provided path is neither file nor directory.")
+
+        # ­--- helper keeps logic tidy
+        def _process_file(self, file_path, individual_type, send):
+            image = cv2.imread(file_path)
+            fname = os.path.basename(file_path)
+            if image is None:
+                yield from send(f"SKIPPED (cannot read): {fname}")
+                return
+            individual_id = os.path.splitext(fname)[0]
+            self.add_face(image, individual_id, individual_id, individual_type)
+            yield from send(f"ADDED: {fname} → {individual_type}")
 
     def recognize_face(self, face_image):
         encodings = face_recognition.face_encodings(face_image)
