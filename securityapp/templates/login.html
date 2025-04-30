@@ -1,26 +1,23 @@
-<!-- securityapp/templates/login.html -->
+{# securityapp/templates/login.html #}
 {% extends "base.html" %}
 {% block content %}
-<div style="max-width: 400px; margin: 20px auto; padding: 20px; background-color: rgba(0,0,0,0.5);">
-    <h2>Login</h2>
-    {% if messages %}
-        {% for message in messages %}
-            <p style="color: red;">{{ message }}</p>
-        {% endfor %}
-    {% endif %}
-    <form method="post">
-        {% csrf_token %}
-        <div>
-            <label>Username:</label>
-            <input type="text" name="username" required>
-        </div>
-        <div>
-            <label>Password:</label>
-            <input type="password" name="password" required>
-        </div>
-        <div style="margin-top: 10px;">
-            <button type="submit" style="background-color: white; color: black;">Login</button>
-        </div>
-    </form>
+<div style="max-width:400px; margin:20px auto; padding:20px; background:rgba(0,0,0,0.5);">
+  <h2>Log In</h2>
+  {% if form.errors %}
+    <p style="color:red;">Your username and password didn’t match. Please try again.</p>
+  {% endif %}
+  <form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    {{ form.username.label_tag }}<br>
+    {{ form.username }}<br><br>
+
+    {{ form.password.label_tag }}<br>
+    {{ form.password }}<br><br>
+
+    <button type="submit" style="background:white; color:black;">Log in</button>
+  </form>
+  <p style="margin-top:10px;">
+    Don’t have an account? <a href="{% url 'register' %}">Register here</a>
+  </p>
 </div>
 {% endblock %}
