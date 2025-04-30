@@ -1,20 +1,36 @@
 {# securityapp/templates/register.html #}
 {% extends "base.html" %}
 {% block content %}
-<div style="max-width:400px; margin:20px auto; padding:20px; background:rgba(0,0,0,0.5);">
+<div style="max-width:400px;margin:2rem auto;padding:1rem;background:rgba(0,0,0,0.5);">
   <h2>Create Account</h2>
+  {% for msg in messages %}
+    <p style="color:green">{{ msg }}</p>
+  {% endfor %}
+
   <form method="post" action="{% url 'register' %}">
     {% csrf_token %}
-    {{ form.username.label_tag }}<br>
-    {{ form.username }}<br><br>
-
-    {{ form.password1.label_tag }}<br>
-    {{ form.password1 }}<br><br>
-
-    {{ form.password2.label_tag }}<br>
-    {{ form.password2 }}<br><br>
-
-    <button type="submit" style="background:white; color:black;">Register</button>
+    {{ form.non_field_errors }}
+    <div>
+      {{ form.username.label_tag }}<br>
+      {{ form.username }}<br>
+      {{ form.username.errors }}
+    </div>
+    <div style="margin-top:1rem;">
+      {{ form.password1.label_tag }}<br>
+      {{ form.password1 }}<br>
+      {{ form.password1.errors }}
+    </div>
+    <div style="margin-top:1rem;">
+      {{ form.password2.label_tag }}<br>
+      {{ form.password2 }}<br>
+      {{ form.password2.errors }}
+    </div>
+    <div style="margin-top:1.5rem;">
+      <button type="submit" style="background:white;color:black;">Register</button>
+    </div>
   </form>
+  <p style="margin-top:1rem;">
+    Already have an account? <a href="{% url 'login' %}">Log in</a>.
+  </p>
 </div>
 {% endblock %}

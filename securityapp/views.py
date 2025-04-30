@@ -11,74 +11,92 @@ from Crisis_Back.security_system import SecuritySystem
 from Crisis_Back.video_camera import VideoCamera
 from Crisis_Back.database_fr import DatabaseFaceRecognizer
 from Crisis_Back.door_controller import DoorController
+from django.contrib.auth         import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms   import AuthenticationForm
+from functools import wraps
+from django.shortcuts            import render, redirect
+from django.contrib              import messages
+from django.contrib.auth         import authenticate, login as auth_login, logout as auth_logout, update_session_auth_hash
+from django.contrib.auth.forms   import AuthenticationForm, UserCreationForm, PasswordChangeForm
+from django.contrib.auth.decorators import login_required
 
-
-def login_required(view_func):
-    @wraps(view_func)
-    def wrapped_view(request, *args, **kwargs):
-        if not request.session.get('logged_in'):
-            messages.error(request, "Please log in to access this page.")
-            return redirect('login')
-        return view_func(request, *args, **kwargs)
-    return wrapped_view
 
 def login_view(request):
+    # Determine where to redirect after login (default to dashboard)
+    next_url = request.GET.get('next') or request.POST.get('next') or 'dashboard'
+
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        if username == 'user' and password == 'password':
-            request.session['logged_in'] = True
-            return redirect('dashboard')
-        else:
-            messages.error(request, "Invalid login credentials")
-    return render(request, 'login.html')
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            auth_login(request, form.get_user())
+            return redirect(next_url)
+        messages.error(request, "Invalid username or password.")
+    else:
+        form = AuthenticationForm()
 
-@login_required
+    return render(request, 'login.html', {
+        'form': form,
+        'next': next_url,
+    })
+
+@login_required(login_url='login')
 def dashboard_view(request):
-    return render(request, 'dashboard.html')
+    # show a password-change form on the dashboard
+    pw_form = PasswordChangeForm(user=request.user)
+    return render(request, 'dashboard.html', {
+        'password_change_form': pw_form
+    })
 
-@login_required
+
+@login_required(login_url='login')
 def logout_view(request):
-    request.session.flush()
+    auth_logout(request)
     return redirect('login')
+
 
 def register_view(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, "Account created—please log in.")
             return redirect('login')
     else:
         form = UserCreationForm()
     return render(request, 'register.html', {'form': form})
 
-@login_required
+
+@login_required(login_url='login')
+def password_change_view(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Keep the user logged in with the new password
+            update_session_auth_hash(request, user)
+            messages.success(request, "Your password was updated.")
+            return redirect('dashboard')
+    else:
+        form = PasswordChangeForm(user=request.user)
+
+    return render(request, 'password_change.html', {
+        'form': form
+    })
+@login_required(login_url='login')
 def change_username(request):
     if request.method == 'POST':
-        new = request.POST['new_username']
-        request.user.username = new
-        request.user.save()
+        new = request.POST.get('new_username', '').strip()
+        if new:
+            request.user.username = new
+            request.user.save()
+            messages.success(request, "Username updated.")
     return redirect('dashboard')
 
-@login_required
-def dashboard_view(request):
-    pw_form = PasswordChangeForm(user=request.user)
-    return render(request, 'dashboard.html', {
-        'password_change_form': pw_form
-    })
-
-from django.shortcuts import redirect
-
-def dashboard_redirect(request):
-    if request.session.get('logged_in'):
-        return redirect('dashboard')
-    return redirect('login')
-
-@login_required
+@login_required(login_url='login')
 def security_view(request):
     message = ''
     # Initialize session‐backed “running” flag

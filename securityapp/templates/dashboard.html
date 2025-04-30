@@ -18,7 +18,7 @@
   </form>
 
   <h3 style="margin-top:20px;">Change Password</h3>
-  <form method="post" action="{% url 'password_change' %}">
+ <form method="post" action="{% url 'password_change' %}">
     {% csrf_token %}
     {{ password_change_form.as_p }}
     <button type="submit">Change Password</button>
