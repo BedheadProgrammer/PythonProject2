@@ -15,4 +15,3 @@ urlpatterns = [
     # use built-in auth for login/logout/password-change:
     path('accounts/', include('django.contrib.auth.urls')),
 ]
-
