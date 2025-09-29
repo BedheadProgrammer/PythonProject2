@@ -1,0 +1,31 @@
+Hello! These are your starting instruction to review CrisisLock! First, please unzip the folder, load the nested folder inside into your PyCharm or IDE. Once you have done this begin setting up your virtual environment. 
+
+
+CMake ≥ 3.10.0 is required.
+C++ Compiler support C++ 14
+
+
+
+For Mac/OS this is achieved with:
+
+ python3 -m venv venv
+source venv/bin/activate
+
+
+For Windows it is:
+
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+
+
+Next we have to install our dependencies, first make sure you have the latest version of pip, then run pip install -r requirements.txt
+to download the frozen dependencies contained in requirements.txt
+
+You can confirm installation with pip list
+
+Afterward you can access method calling through Main.py where you can run our application
+
+Simultaneously you can host a local server with command: python manage.py runserver 
+and view the User Interface provided as well as access the functions called.
+
+Please note as of Beta Testing All features are working but you may need to access webpages in the top left hand side of the screen. Thank you.
